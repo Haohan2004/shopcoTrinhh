@@ -3,7 +3,7 @@ import { useState } from 'react'
 import './App.css'
 import {Route, Routes} from "react-router-dom";
 import Home from './Components/Home.jsx'
-import Product from './Component/Product'
+import Product from './Component/Product.jsx'
 import Customer from "./Components/Customer.jsx";
 import Navbar from "./Components/Navbar.jsx";
 import Order from './Components/Order.jsx'
