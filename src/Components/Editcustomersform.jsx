@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import { PlusOutlined } from '@ant-design/icons';
 import {Button, Cascader, Checkbox, ColorPicker, DatePicker, Form, Input, InputNumber, Radio, Rate, Select, Slider, Switch, TreeSelect, Upload,
 } from 'antd';
+import {supabase} from "@/supabase-client.js";
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
 const normFile = e => {
@@ -24,27 +25,41 @@ const Editcustomersform= ({OnSend,customer,reset}) => {
         setPhone(customer.phone);
         setAddress(customer.address);
     }, [customer]);
+    // const editCustomer = async () => {
+    //     try{
+    //         const response = await fetch(`http://localhost:8080/Customer/${(customer.customer_id)}`,{
+    //             method: 'PUT',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //             },
+    //             body: JSON.stringify({full_name: fullname,address: address, email: email, phone: phone, })
+    //
+    //         })
+    //         if (!response.ok)
+    //         {
+    //             throw new Error("Sửa Khách Hàng thất bại");
+    //         }
+    //         reset();
+    //         OnSend();
+    //
+    //     }
+    //     catch (err) {
+    //         console.error(err);
+    //     }
+    // }
     const editCustomer = async () => {
-        try{
-            const response = await fetch(`http://localhost:8080/Customer/${(customer.customer_id)}`,{
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({full_name: fullname,address: address, email: email, phone: phone, })
 
-            })
-            if (!response.ok)
-            {
-                throw new Error("Sửa Khách Hàng thất bại");
-            }
+      const {error}=await supabase.from("customers").update({full_name: fullname, email: email, phone: phone, address: address}).eq("customer_id",customer.customer_id);
+           if(error)
+           {
+               console.log(error);
+               return;
+           }
             reset();
             OnSend();
 
-        }
-        catch (err) {
-            console.error(err);
-        }
+
+
     }
     return (
         <>

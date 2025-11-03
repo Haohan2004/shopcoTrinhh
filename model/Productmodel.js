@@ -14,6 +14,6 @@ export const getproductwithid = async (id)=> {
     return row;
 }
 export const getproductwithname = async(name) =>{
-    const [rows] = await db.execute("SELECT * from clothes where cloth_name like ?",[`%${name}%`]);
+    const [rows] = await db.execute("SELECT * from clothes where cloth_name like ? and status=1",[`%${name}%`]);
     return rows;
 }

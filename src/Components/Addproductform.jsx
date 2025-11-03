@@ -18,6 +18,7 @@ import {
     TreeSelect,
     Upload,
 } from 'antd';
+import {supabase} from "@/supabase-client.js";
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
 
@@ -49,17 +50,24 @@ const Addproductform= ({OnSend,upload}) => {
     }
     useEffect( ()=> {
             const fetchData = async () => {
-                const response = await fetch("http://localhost:8080/Color", {});
-                const data = await response.json();
+               const {data,error}= await supabase.from("mausac").select("*");
+               if(error)
+               {
+                   console.log(error)
+                   return;
+               }
                 setsrccolor(data);
             }
             fetchData();
-        }
-    )
+        },[])
     useEffect( ()=> {
             const fetchData = async () => {
-                const response = await fetch("http://localhost:8080/loai", {});
-                const data = await response.json();
+                const {data,error}= await supabase.from("kieudo").select("*");
+        if(error)
+        {
+            console.log(error);
+            return;
+        }
                 setsrcloai(data);
             }
             fetchData();
@@ -67,54 +75,80 @@ const Addproductform= ({OnSend,upload}) => {
     )
     useEffect( ()=> {
             const fetchData = async () => {
-                const response = await fetch("http://localhost:8080/size", {});
-                const data = await response.json();
+                const {data,error}= await supabase.from("kich_co").select("*");
+                if(error)
+                {
+                    console.log(error);
+                    return;
+                }
                 setsrcsize(data);
             }
             fetchData();
         }
     )
-    useEffect( ()=> {
-       console.log(size)
-    },[size]);
 
 
+
+    // const uploadpicture = async (e) => {
+    //     const formdata= new FormData();
+    //     const file = e.target.files[0];
+    //     formdata.append("image", file);
+    //     const res = await fetch(`http://localhost:8080/upload`,{
+    //         method: 'POST',
+    //         body: formdata,
+    //     })
+    //     const data = await res.json();
+    //     setimg(data.fileurl);
+    // }
     const uploadpicture = async (e) => {
-        const formdata= new FormData();
         const file = e.target.files[0];
-        formdata.append("image", file);
-        const res = await fetch(`http://localhost:8080/upload`,{
-            method: 'POST',
-            body: formdata,
-        })
-        const data = await res.json();
-        setimg(data.fileurl);
+        console.log(file)
+        const filename=`${file.name}`;
+        const {error}=await supabase.storage.from("image").upload(`uploads/${filename}`,file,{upsert:true});
+        const {data} = await supabase.storage.from("image").getPublicUrl(`uploads/${filename}`);
+        if(error) throw error;
+        console.log();
+        setimg(data.publicUrl);
+        console.log(img);
     }
+    // const addproduct = async (e) => {
+    //     e.preventDefault();
+    //     try{
+    //         const response = await fetch("http://localhost:8080/product",{
+    //             method: 'POST',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //
+    //             },
+    //             body: JSON.stringify({cloth_name: productname,hinh: img, color: color, kieu: type,size:size,quantity:quantity,rental_price:price }),
+    //
+    //         })
+    //         if (!response.ok)
+    //         {
+    //             throw new Error("Thêm Sản Phẩm thất bại");
+    //         }
+    //         const newproduct = await response.json();
+    //         upload(newproduct);
+    //         resetinfo();
+    //         OnSend();
+    //     }
+    //     catch (err) {
+    //         console.error(err);
+    //     }
+    // }
     const addproduct = async (e) => {
         e.preventDefault();
-        try{
-            const response = await fetch("http://localhost:8080/product",{
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-
-                },
-                body: JSON.stringify({cloth_name: productname,hinh: img, color: color, kieu: type,size:size,quantity:quantity,rental_price:price }),
-
-            })
-            if (!response.ok)
-            {
-                throw new Error("Thêm Sản Phẩm thất bại");
-            }
-            const newproduct = await response.json();
+        const newproduct={cloth_name: productname,hinh:img,color:color,kieu:type,size:size,quantity:quantity,rental_price:price};
+        const {error} = await supabase.from("clothes").insert(newproduct).single();
+        if(error)
+        {
+            console.log(error);
+        }
             upload(newproduct);
             resetinfo();
             OnSend();
         }
-        catch (err) {
-            console.error(err);
-        }
-    }
+
 
     return (
         <>

@@ -4,6 +4,7 @@ import {Input} from "@/components/ui/input"
 import Addcustomersform from "./Addcustomersform.jsx";
 import Editcustomersform from "./Editcustomersform.jsx";
 import {useEffect, useRef, useState} from "react";
+import {supabase} from "@/supabase-client.js";
 
 
 const Customer = () => {
@@ -11,9 +12,13 @@ const Customer = () => {
     const [cus, setCus] = useState(null);
     const [searchValue, setSearchValue] = useState("");
     const fetchDatacus = async () => {
-        const response = await fetch("http://localhost:8080/Customer");
-        const data = await response.json();
+        const {error,data} = await supabase.from("customers").select("* ").eq("status",1);
+        if(error){
+            console.log(error)
+            return;
+        }
         setDatasource(data);
+
     }
 
 
@@ -21,47 +26,77 @@ const Customer = () => {
 
 
      const getcustomerwithid = async (id) => {
-try {
-    const response = await fetch(`http://localhost:8080/Customer/${id}`);
-    const data = await response.json();
+
+    const {error,data} = await supabase.from("customers").select("* where status =1").eq("customer_id",id);
+    if(error){
+        console.log(error)
+    }
     setCus(data[0]);
     console.log(cus);
-}
-catch (error) {
-    console.log(error);
-}}
 
+}
+
+    // const deleteCustomer = async (id) => {
+    //
+    //     try{
+    //         if(confirm("Bạn có chắc chắn muốn xóa không")==true) {
+    //             const response = await fetch(`http://localhost:8080/Customer/${id}`, {
+    //                 method: 'DELETE',
+    //             })
+    //             if (!response.ok) {
+    //                 throw new Error("Xóa Khách Hàng thất bại");
+    //             }
+    //         }
+    //     }
+    //     catch (err) {
+    //         console.error(err);
+    //     }
+    // }
     const deleteCustomer = async (id) => {
 
-        try{
+
             if(confirm("Bạn có chắc chắn muốn xóa không")==true) {
-                const response = await fetch(`http://localhost:8080/Customer/${id}`, {
-                    method: 'DELETE',
-                })
-                if (!response.ok) {
-                    throw new Error("Xóa Khách Hàng thất bại");
-                }
+               const {error} = await supabase.from("customers").update({status:2}).eq("customer_id",id);
+               setDatasource(prev => prev.filter(item=> item.customer_id != id));
+            if(error){
+                console.log(error)
             }
-        }
-        catch (err) {
-            console.error(err);
-        }
-    }
+            }
+
+            }
+
+
+    // const searchcustomer = async () => {
+    //         if(searchValue==""){
+    //             fetchDatacus();
+    //             return;
+    //         }
+    //     try{
+    //         const response = await fetch(`http://localhost:8080/Customer/search/${searchValue}`);
+    //         const data = await response.json();
+    //         console.log(data);
+    //         setDatasource(data);
+    //
+    //     }
+    //     catch (error) {
+    //         console.error(error);
+    //     }
     const searchcustomer = async () => {
-            if(searchValue==""){
-                fetchDatacus();
-                return;
+        if(searchValue==""){
+            fetchDatacus();
+            return;
+        }
+
+            const {error,data} = await supabase.from("customers").select("*").ilike("full_name",`%${searchValue}%`).eq("status",1);
+            if(error)
+            {
+                console.log(error)
             }
-        try{
-            const response = await fetch(`http://localhost:8080/Customer/search/${searchValue}`);
-            const data = await response.json();
             console.log(data);
             setDatasource(data);
 
-        }
-        catch (error) {
-            console.error(error);
-        }
+
+
     }
      const handleSubmit = (item) => {
          setDatasource((prev)=>[...prev,item]);

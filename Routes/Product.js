@@ -4,6 +4,6 @@ import {deleteproduct, getproduct, getProductwithid, insert, searchproduct} from
 
 router.get("/",getproduct).post("/", insert);
 router.get("/:id",getProductwithid).delete("/:id",deleteproduct);
-
+router.get("/search/:name",searchproduct);
 
 export default router;
