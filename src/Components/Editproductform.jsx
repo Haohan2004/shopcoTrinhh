@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import { UploadOutlined  } from '@ant-design/icons';
-import {Input} from "@/components/ui/input"
+import {Input} from "./ui/input.tsx"
 import {
     Button,
     Cascader,
