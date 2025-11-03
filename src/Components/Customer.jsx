@@ -1,6 +1,6 @@
 import Navbar from "./Navbar.jsx";
 import {Table, Button, Space} from "antd";
-import {Input} from "@/components/ui/input"
+import {Input} from "@/components/ui/input.tsx"
 import Addcustomersform from "./Addcustomersform.jsx";
 import Editcustomersform from "./Editcustomersform.jsx";
 import {useEffect, useRef, useState} from "react";
