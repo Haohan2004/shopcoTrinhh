@@ -18,6 +18,7 @@ import {
     TreeSelect,
     Upload,
 } from 'antd';
+import {supabase} from "@/supabase-client.js";
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
 
@@ -27,14 +28,14 @@ const normFile = e => {
     }
     return e?.fileList;
 };
-const Editproductform= ({OnSend,upload,product}) => {
+const Editproductform= ({OnSend,reset,product}) => {
     const [productname, setproductname] = useState(product.cloth_name);
     const [img, setimg] = useState(product.hinh);
     const [color, setcolor] = useState(product.color);
     const [type, settype] = useState(product.kieu);
     const [size, setsize] = useState(product.size);
     const [quantity, setquantity] = useState(product.quantity);
-    const [price, setprice] = useState(product.price);
+    const [price, setprice] = useState(product.rental_price);
     const [srccolor, setsrccolor] = useState([]);
     const [srcloai, setsrcloai] = useState([]);
     const [srcsize, setsrcsize] = useState([[]]);
@@ -48,27 +49,41 @@ const Editproductform= ({OnSend,upload,product}) => {
        setprice("");
     }
     useEffect(() => {
-        setproductname(product.name);
+        setproductname(product.cloth_name);
         setimg(product.hinh);
         setcolor(product.color);
-        settype(product.type);
+        settype(product.kieu);
         setsize(product.size);
         setquantity(product.quantity);
-        setprice(product.price);
+        setprice(product.rental_price);
     }, [product]);
-    useEffect( ()=> {
-            const fetchData = async () => {
-                const response = await fetch("http://localhost:8080/Color", {});
-                const data = await response.json();
-                setsrccolor(data);
-            }
-            fetchData();
+    useEffect(()=> {
+        console.log(product);
+        console.log(product.cloth_name);
+        console.log(productname);
         }
-    )
+    ,[])
+
+    useEffect( ()=> {
+        const fetchData = async () => {
+            const {data,error}= await supabase.from("mausac").select("*");
+            if(error)
+            {
+                console.log(error)
+                return;
+            }
+            setsrccolor(data);
+        }
+        fetchData();
+    },[])
     useEffect( ()=> {
             const fetchData = async () => {
-                const response = await fetch("http://localhost:8080/loai", {});
-                const data = await response.json();
+                const {data,error}= await supabase.from("kieudo").select("*");
+                if(error)
+                {
+                    console.log(error);
+                    return;
+                }
                 setsrcloai(data);
             }
             fetchData();
@@ -76,28 +91,28 @@ const Editproductform= ({OnSend,upload,product}) => {
     )
     useEffect( ()=> {
             const fetchData = async () => {
-                const response = await fetch("http://localhost:8080/size", {});
-                const data = await response.json();
+                const {data,error}= await supabase.from("kich_co").select("*");
+                if(error)
+                {
+                    console.log(error);
+                    return;
+                }
                 setsrcsize(data);
             }
             fetchData();
         }
     )
-    useEffect( ()=> {
-       console.log(size)
-    },[size]);
-
 
     const uploadpicture = async (e) => {
-        const formdata= new FormData();
         const file = e.target.files[0];
-        formdata.append("image", file);
-        const res = await fetch(`http://localhost:8080/upload`,{
-            method: 'POST',
-            body: formdata,
-        })
-        const data = await res.json();
-        setimg(data.fileurl);
+        console.log(file)
+        const filename=`${file.name}`;
+        const {error}=await supabase.storage.from("image").upload(`uploads/${filename}`,file,{upsert:true});
+        const {data} = await supabase.storage.from("image").getPublicUrl(`uploads/${filename}`);
+        if(error) throw error;
+        console.log();
+        setimg(data.publicUrl);
+        console.log(img);
     }
     // const addproduct = async (e) => {
     //     e.preventDefault();
@@ -124,6 +139,16 @@ const Editproductform= ({OnSend,upload,product}) => {
     //         console.error(err);
     //     }
     // }
+    const editproduct = async () =>{
+        const {error}= await supabase.from("clothes").update({cloth_name:productname,hinh:img,color:color,kieu:type,size:size,quantity:quantity,rental_price:price}).eq("cloth_id",product.cloth_id);
+        if(error)
+        {
+            console.log(error)
+        }
+        reset();
+        resetinfo();
+        OnSend();
+    }
 
     return (
         <>
@@ -172,7 +197,7 @@ const Editproductform= ({OnSend,upload,product}) => {
                     <Input placeholder="VND...." value={price} onChange={(e) => setprice(e.target.value)} />
                 </Form.Item>
                 <Form.Item wrapperCol={{ offset: 10, span: 16 }}>
-                    <Button type="primary" htmlType="submit" className="mx-2" onClick={(e)=>{addproduct(e)}}>
+                    <Button type="primary" htmlType="submit" className="mx-2" onClick={()=>{editproduct();}}>
                         Gửi
                     </Button>
                     <Button color="red" type="primary" htmlType="submit" onClick={()=> {resetinfo();OnSend()}} >

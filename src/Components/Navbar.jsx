@@ -40,7 +40,7 @@ const Navbar = () => {
 
         <Menu
             onClick={onClick}
-            style={{ width: 300}}
+            style={{ width: 180}}
             defaultSelectedKeys={['1']}
             defaultOpenKeys={['sub1']}
             mode="inline"

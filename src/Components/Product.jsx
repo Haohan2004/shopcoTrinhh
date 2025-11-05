@@ -7,6 +7,7 @@ import Addproductform from "./Addproductform.jsx";
 import Editproductform from "./Editproductform.jsx"
 import {Input} from "@/Components/ui/input.js";
 import {supabase} from "@/supabase-client.js";
+import {data} from "react-router-dom";
 const Product = () => {
     const [datasource,setDatasource] = useState([]);
     const [products,setProducts] = useState(null);
@@ -20,96 +21,117 @@ const Product = () => {
     const [colorfilter, setcolorfilter] = useState("");
     const [typefilter, settypefilter] = useState("");
     const [sizefilter, setsizefilter] = useState("");
+    const [datatemp, setdatatemp] = useState([]);
     const handleSubmit = (item) => {
         setDatasource((prev)=>[...prev,item]);
+        setdatatemp(datasource);
     }
 
     useEffect(() => {
 
         fetchData();
     },[])
+
     useEffect(() => {
         searchproduct();
     },[searchValue])
+
+
+
     useEffect( ()=> {
-        if(colorfilter=="" && searchValue!="")
+        if(colorfilter=="Tất Cả" && searchValue!="")
         {
             searchproduct();
             return;
         }
-        else if(colorfilter=="")
+        else if(colorfilter=="Tất Cả"||colorfilter=="")
         {
-            return;
+            setDatasource(datatemp)
+           return;
         }
-        const temp =datasource.filter(p => p.ten_mau ===colorfilter);
-        setDatasource(temp);
+            if(searchValue!="")
+            {
+                const temp = datasource.filter(p => p.color == colorfilter);
+                setDatasource(temp);
+            }
+            else {
+                const temp = datatemp.filter(p => p.color == colorfilter);
+                console.log(temp);
+                setDatasource(temp);
+            }
 
 
     },[colorfilter]);
+    // useEffect( ()=> {
+    //     if(typefilter==null && searchValue!="")
+    //     {
+    //         searchproduct();
+    //         return;
+    //     }
+    //     else if(typefilter==null)
+    //     {
+    //         fetchData();
+    //     }
+    //
+    //
+    //
+    // },[typefilter]);
+    // useEffect( ()=> {
+    //     if(sizefilter==null && searchValue!="")
+    //     {
+    //         searchproduct();
+    //         return;
+    //     }
+    //     else if(sizefilter==null)
+    //     {
+    //         fetchData();
+    //     }
+    // },[sizefilter]);
     useEffect( ()=> {
-        if(typefilter==null && searchValue!="")
-        {
-            searchproduct();
-            return;
+        const fetchData = async () => {
+            const {data,error}= await supabase.from("mausac").select("*");
+            if(error)
+            {
+                console.log(error)
+                return;
+            }
+            const all = {ma_mau:0,ten_mau:"Tất Cả"};
+            setsrccolor([all,...data]);
         }
-        else if(typefilter==null)
-        {
+        fetchData();
+    },[]);
+    useEffect( ()=> {
+            const fetchData = async () => {
+                const {data,error}= await supabase.from("kieudo").select("*");
+                if(error)
+                {
+                    console.log(error);
+                    return;
+                }
+                setsrcloai(data);
+            }
             fetchData();
         }
-
-
-
-    },[typefilter]);
+    )
     useEffect( ()=> {
-        if(sizefilter==null && searchValue!="")
-        {
-            searchproduct();
-            return;
-        }
-        else if(sizefilter==null)
-        {
+            const fetchData = async () => {
+                const {data,error}= await supabase.from("kich_co").select("*");
+                if(error)
+                {
+                    console.log(error);
+                    return;
+                }
+                setsrcsize(data);
+            }
             fetchData();
         }
-
-
-
-    },[sizefilter]);
-
-    // useEffect( ()=> {
-    //         const fetchData = async () => {
-    //             const response = await fetch("http://localhost:8080/Color", {});
-    //             let data = await response.json();
-    //             data=["",...data]
-    //             setsrccolor(data)
-    //         }
-    //         fetchData();
-    //     }
-    // )
-    // useEffect( ()=> {
-    //         const fetchData = async () => {
-    //             const response = await fetch("http://localhost:8080/loai", {});
-    //             let data = await response.json();
-    //             data=["",...data]
-    //             setsrcloai(data);
-    //         }
-    //         fetchData();
-    //     }
-    // )
-    // useEffect( ()=> {
-    //         const fetchData = async () => {
-    //             const response = await fetch("http://localhost:8080/size", {});
-    //             let data = await response.json();
-    //             data=["",...data]
-    //             setsrcsize(data)
-    //         }
-    //         fetchData();
-    //     }
-    // )
+    )
 
 
     const fetchData = async () => {
       const {data,error}= await supabase.from("clothes").select("*").eq("status",1);
         setDatasource(data);
+        setdatatemp(data);
     }
     const openForm = () => {
         formRef.current.style.display = "block";
@@ -128,29 +150,26 @@ const Product = () => {
     }
     const deleteProduct = async (id) => {
 
-        try{
-            if(confirm("Bạn có chắc chắn muốn xóa không")==true) {
-                const response = await fetch(`http://localhost:8080/product/${id}`, {
-                    method: 'DELETE',
-                })
-                if (!response.ok) {
-                    throw new Error("Xóa sản phẩm thất bại");
-                }
+        if(confirm("Bạn có chắc chắn muốn xóa không")==true) {
+            const {error}= await supabase.from("clothes").update({status:2}).eq("cloth_id",id);
+            if(error)
+            {
+                console.error(error);
+
             }
-        }
-        catch (err) {
-            console.error(err);
+            fetchData();
+
         }
     }
 
     const getproductwithid = async (id) => {
-        try {
-            const response = await fetch(`http://localhost:8080/product/${id}`);
-            const data = await response.json();
+
+            const {data,error} = await supabase.from("clothes").select("*").eq("cloth_id",id).single();
             setProducts(data);
 
-        }
-        catch (error) {
+
+        if(error)
+        {
             console.log(error);
         }}
     const openEditForm = () => {
@@ -168,22 +187,7 @@ const Product = () => {
         backgroundRef.current.style.display = "block";
         backgroundRef.current.style.pointerEvents = "auto";
     };
-    // const searchproduct = async () => {
-    //     if(searchValue==""){
-    //         fetchData();
-    //         return;
-    //     }
-    //     try{
-    //         const response = await fetch(`http://localhost:8080/product/search/${searchValue}`);
-    //         const data = await response.json();
-    //         console.log(data);
-    //         setDatasource(data);
-    //
-    //     }
-    //     catch (error) {
-    //         console.error(error);
-    //     }
-    // }
+
     const searchproduct = async () => {
         if(searchValue==""){
             fetchData();
@@ -196,10 +200,8 @@ const Product = () => {
         }
             console.log(data);
             setDatasource(data);
-
-
-
     }
+
 
     const columns = [
         {
@@ -212,7 +214,7 @@ const Product = () => {
             dataIndex: 'hinh',
             key: 'img',
             render:(text,record) => (
-                <img src={`${record.hinh}` } className={"w-10 h-10 cursor-pointer"} onclick/>
+                <img src={`${record.hinh}` } className={"w-10 h-10 cursor-pointer"} />
             )
         },
         {
@@ -245,7 +247,7 @@ const Product = () => {
             title: 'Tiện Ích',
             render: (text, record) => (
                 <Space size="small" >
-                    <Button  color="blue" variant="solid" onClick={() => {getproductwithid(record.cloth_id); openEditForm()}} > Sửa</Button>
+                    <Button  color="blue" variant="solid" onClick={() => {getproductwithid(record.cloth_id);openEditForm();}} > Sửa</Button>
                     <Button color="red" variant="solid" onClick={()=>{deleteProduct(record.cloth_id)}} >Xóa</Button>
                 </Space>
             ),
@@ -265,7 +267,7 @@ const Product = () => {
                 <div className="flex text-left m-2">
                     <Input type="email" className="w-[15vw] mr-[2vw]" value={searchValue} onChange={(e) => {setSearchValue(e.target.value) }}/>
                     <div className="w-[8vw] flex justify-between">
-                    <Select  placeholder="Màu Sắc..." className="w-[8vw] max-w-[8vw] min-w-[8vw]" onChange={(value) =>{setcolorfilter(value)}}>
+                    <Select  placeholder="Màu Sắc..." className="w-[8vw] max-w-[8vw] min-w-[8vw]" onChange={(value)=>{setcolorfilter(value)}}>
                         {srccolor.map((color) =>(
 
                             <Select.Option value={color.ten_mau}  >{color.ten_mau} </Select.Option>
@@ -282,6 +284,10 @@ const Product = () => {
                                 <Select.Option value={size.ten_kich_co}  >{size.ten_kich_co}</Select.Option>
                             ))}
                         </Select>
+                        <div className="flex mx-[1vw] ">
+                        <Button  color="blue" variant="solid"  className="mr-2" > Filter</Button>
+                        <Button color="red" variant="solid"  >Reset</Button>
+                        </div>
                     </div>
 
                 </div>
@@ -296,7 +302,7 @@ const Product = () => {
             </div>
             <div className="w-[45vw] h-[36vw] border-2 p-[2vw] rounded-2xl absolute top-[6vw] left-[32vw] hidden" ref={EditformRef}>
 
-                {   products && <Editproductform OnSend={closeEditForm} product={products}/>}
+                {   products && <Editproductform OnSend={closeEditForm} product={products}  reset={fetchData}/>}
 
             </div>
 
